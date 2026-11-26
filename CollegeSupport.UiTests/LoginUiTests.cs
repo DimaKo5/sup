@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using FlaUI.Core;
 using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Tools;
@@ -19,14 +21,25 @@ public class LoginUiTests
 {
     private const string LoginTitle = "Вход — CollegeSupport";
     private const string MainTitle = "CollegeSupport — обращения технической поддержки";
-    private static Application Launch() =>
-        Application.Launch(Environment.GetEnvironmentVariable("COLLEGESUPPORT_UI_EXE")!);
+    private sealed class TestClient : IDisposable
+    {
+        public Application Application { get; } =
+            Application.Launch(Environment.GetEnvironmentVariable("COLLEGESUPPORT_UI_EXE")!);
+
+        public void Dispose()
+        {
+            if (!Application.HasExited)
+                Application.Close(killIfCloseFails: true);
+            Application.Dispose();
+        }
+    }
 
     [InteractiveFact]
     public void LoginWindow_OpensAndShowsTitle()
     {
         using var automation = new UIA3Automation();
-        using var app = Launch();
+        using var client = new TestClient();
+        var app = client.Application;
         Assert.Equal(LoginTitle, WaitWindow(app, automation, LoginTitle).Title);
     }
 
@@ -34,7 +47,8 @@ public class LoginUiTests
     public void Login_WithEmptyFields_ShowsError()
     {
         using var automation = new UIA3Automation();
-        using var app = Launch();
+        using var client = new TestClient();
+        var app = client.Application;
         var window = WaitWindow(app, automation, LoginTitle);
         Control(window, "LoginButton").AsButton().Invoke();
         Assert.Equal("Введите логин и пароль.",
@@ -45,7 +59,8 @@ public class LoginUiTests
     public void Login_WithValidCredentials_OpensMainWindow()
     {
         using var automation = new UIA3Automation();
-        using var app = Launch();
+        using var client = new TestClient();
+        var app = client.Application;
         Assert.Equal(MainTitle, SignIn(app, automation).Title);
     }
 
@@ -53,7 +68,8 @@ public class LoginUiTests
     public void Logout_ReturnsToLoginWindow()
     {
         using var automation = new UIA3Automation();
-        using var app = Launch();
+        using var client = new TestClient();
+        var app = client.Application;
         var main = SignIn(app, automation);
         Control(main, "LogoutButton").AsButton().Invoke();
         Assert.Equal(LoginTitle, WaitWindow(app, automation, LoginTitle).Title);
@@ -63,7 +79,8 @@ public class LoginUiTests
     public void MainWindow_HasAppealsGrid()
     {
         using var automation = new UIA3Automation();
-        using var app = Launch();
+        using var client = new TestClient();
+        var app = client.Application;
         var main = SignIn(app, automation);
         Assert.NotEmpty(Control(main, "AppealsGrid").AsDataGridView().Rows);
     }
@@ -72,7 +89,8 @@ public class LoginUiTests
     public void MainWindow_SearchWithoutMatchShowsZeroRows()
     {
         using var automation = new UIA3Automation();
-        using var app = Launch();
+        using var client = new TestClient();
+        var app = client.Application;
         var main = SignIn(app, automation);
         var grid = Control(main, "AppealsGrid").AsDataGridView();
         Assert.NotEmpty(grid.Rows);
@@ -94,8 +112,25 @@ public class LoginUiTests
         return main;
     }
 
-    private static Window WaitWindow(Application app, UIA3Automation automation, string title) =>
-        WaitFor(() => app.GetAllTopLevelWindows(automation).FirstOrDefault(window => window.Title == title));
+    private static Window WaitWindow(Application app, UIA3Automation automation, string title)
+    {
+        using var process = Process.GetProcessById(app.ProcessId);
+        return WaitFor<Window>(() =>
+        {
+            process.Refresh();
+            if (process.HasExited || process.MainWindowTitle != title || process.MainWindowHandle == IntPtr.Zero)
+                return null;
+
+            try
+            {
+                return automation.FromHandle(process.MainWindowHandle).AsWindow();
+            }
+            catch (COMException)
+            {
+                return null;
+            }
+        });
+    }
 
     private static AutomationElement Control(Window window, string automationId) =>
         WaitFor(() => window.FindFirstDescendant(cf => cf.ByAutomationId(automationId)));
