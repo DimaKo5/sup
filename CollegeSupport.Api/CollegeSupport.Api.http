@@ -1,0 +1,96 @@
+@baseUrl = http://localhost:5006
+@token = вставьте_сюда_значение_token_из_ответа_на_вход
+
+### 0. Вход
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{ "login": "dispatcher", "password": "Dispatcher123" }
+
+### 1. Список обращений
+GET {{baseUrl}}/api/appeals
+Authorization: Bearer {{token}}
+
+### 2. Обращения в статусе «В работе»
+GET {{baseUrl}}/api/appeals?status=InProgress
+Authorization: Bearer {{token}}
+
+### 3. Создание сотрудника (телефон должен стать +79123456789)
+POST {{baseUrl}}/api/employees
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "fullName": "Тестов Тест Тестович",
+  "phone": "8 (912) 345-67-89",
+  "email": null,
+  "cabinet": "305"
+}
+
+### 4. Ошибки валидации (ожидается 400)
+POST {{baseUrl}}/api/employees
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "fullName": "Т", "phone": "", "email": "bad", "cabinet": "" }
+
+### 5. Создание обращения
+POST {{baseUrl}}/api/appeals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "employeeId": 1,
+  "cabinet": "101",
+  "equipment": "Ноутбук HP 250 G8",
+  "problemDescription": "Не работает клавиатура"
+}
+
+### 6. Назначение техника Петрова (id 3) на обращение 6
+PUT {{baseUrl}}/api/appeals/6/technician
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "technicianId": 3 }
+
+### 7. Обращение 6 → «В работе»
+PUT {{baseUrl}}/api/appeals/6/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "status": "InProgress" }
+
+### 8. Недопустимый переход «В работе» → «Закрыто»
+PUT {{baseUrl}}/api/appeals/6/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "status": "Closed" }
+
+### 9. Несуществующее обращение
+GET {{baseUrl}}/api/appeals/999
+Authorization: Bearer {{token}}
+
+### 10. Импорт сотрудников (ожидается: импортирован 1, пропущено 3)
+POST {{baseUrl}}/api/exchange/employees/import
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": "ФИО;Телефон;Email;Кабинет\nПавлов Павел Павлович;+7 900 000-00-01;pavlov@example.com;101\nБезтелефонов Борис;123;;102\nИванов Иван Иванович;89001112233;;101\nБезкабинета Борис;+79000000002;;"
+}
+
+### 11. Выгрузка в XML
+GET {{baseUrl}}/api/exchange/appeals/export?format=xml
+Authorization: Bearer {{token}}
+
+### 12. Неподдерживаемый формат (ожидается 400)
+GET {{baseUrl}}/api/exchange/appeals/export?format=pdf
+Authorization: Bearer {{token}}
+
+### 13. Статистика
+GET {{baseUrl}}/api/appeals/statistics
+Authorization: Bearer {{token}}
+
+### 14. Проверка работоспособности
+GET {{baseUrl}}/health
