@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using CollegeSupport.Core.Contracts;
 using CollegeSupport.Core.Entities;
 using CollegeSupport.Core.Logging;
@@ -15,6 +16,10 @@ public partial class MainWindow : Window
 {
     /// <summary>Элемент выпадающего списка статусов: русское название + значение (null = «все»).</summary>
     private sealed record StatusItem(string Name, AppealStatus? Value);
+    private sealed record RoleItem(string Name, UserRole Role);
+    private readonly DispatcherTimer _searchTimer = new() { Interval = TimeSpan.FromMilliseconds(250) };
+    private List<EmployeeDto> _employees = [];
+    private int _appealsRequest;
 
     public MainWindow()
     {
@@ -24,6 +29,26 @@ public partial class MainWindow : Window
         filterItems.AddRange(Enum.GetValues<AppealStatus>().Select(s => new StatusItem(s.ToDisplayName(), s)));
         StatusFilter.ItemsSource = filterItems;
         StatusFilter.SelectedIndex = 0;
+
+        StatusFilter.SelectionChanged += async (_, _) => await LoadAppealsAsync();
+        SearchBox.TextChanged += (_, _) =>
+        {
+            _searchTimer.Stop();
+            ++_appealsRequest;
+            _searchTimer.Start();
+        };
+        _searchTimer.Tick += async (_, _) => await LoadAppealsAsync();
+        Closed += (_, _) =>
+        {
+            _searchTimer.Stop();
+            ++_appealsRequest;
+        };
+
+        UserRoleBox.ItemsSource = Enum.GetValues<UserRole>()
+            .Select(role => new RoleItem(role.ToDisplayName(), role)).ToList();
+        UserRoleBox.SelectedItem = ((IEnumerable<RoleItem>)UserRoleBox.ItemsSource)
+            .First(item => item.Role == UserRole.Technician);
+        WorkspaceTabs.SelectionChanged += WorkspaceTabs_SelectionChanged;
     }
 
     private AppealDto? SelectedAppeal => AppealsGrid.SelectedItem as AppealDto;
@@ -46,12 +71,8 @@ public partial class MainWindow : Window
     private async void Window_Loaded(object sender, RoutedEventArgs e)
     {
         var user = AppServices.CurrentUser;
-        UserText.Text = user is null ? string.Empty : $"{user.FullName} ({user.Role.ToDisplayName()})";
+        UserText.Text = user is null ? string.Empty : $"{user.Role.ToDisplayName()} · {user.Login}";
         ApplyRolePermissions();
-
-        ServerStatusText.Text = await AppServices.Api.IsServerHealthyAsync()
-            ? "Сервер: доступен"
-            : "Сервер: недоступен";
 
         if (!IsTechnician)
             await Ui.RunSafeAsync(this, async () => TechnicianBox.ItemsSource = await AppServices.Api.GetTechniciansAsync());
@@ -66,18 +87,25 @@ public partial class MainWindow : Window
         NewAppealButton.Visibility = visibility;
         TechnicianGroup.Visibility = visibility;
         ExchangeGroup.Visibility = visibility;
+        EmployeesTab.Visibility = visibility;
+        UsersTab.Visibility = AppServices.CurrentUser?.Role == UserRole.Admin ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private async Task LoadAppealsAsync()
     {
+        _searchTimer.Stop();
+        int request = ++_appealsRequest;
         var status = (StatusFilter.SelectedItem as StatusItem)?.Value;
         int? selectedId = SelectedAppeal?.Id;
 
         await Ui.RunSafeAsync(this, async () =>
         {
             var appeals = await AppServices.Api.GetAppealsAsync(status, SearchBox.Text);
+            if (request != _appealsRequest)
+                return;
+
             AppealsGrid.ItemsSource = appeals;
-            CountText.Text = $"Обращений: {appeals.Count}";
+            CountText.Text = appeals.Count == 0 ? "По выбранным условиям обращений нет." : $"Найдено обращений: {appeals.Count}";
             if (selectedId.HasValue)
                 AppealsGrid.SelectedItem = appeals.FirstOrDefault(a => a.Id == selectedId);
         });
@@ -139,7 +167,81 @@ public partial class MainWindow : Window
         if (ok)
         {
             AppServices.Logger.Info($"Обращение {appeal.Id}: статус → {newStatus}");
-            await LoadAppealsAsync();
+            if ((StatusFilter.SelectedItem as StatusItem)?.Value is { } activeFilter && activeFilter != newStatus)
+                StatusFilter.SelectedItem = ((IEnumerable<StatusItem>)StatusFilter.ItemsSource)
+                    .First(item => item.Value == newStatus);
+            else
+                await LoadAppealsAsync();
+        }
+    }
+
+    private async void WorkspaceTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!ReferenceEquals(e.OriginalSource, WorkspaceTabs))
+            return;
+
+        if (WorkspaceTabs.SelectedItem == EmployeesTab && !IsTechnician)
+            await LoadEmployeesAsync();
+        else if (WorkspaceTabs.SelectedItem == UsersTab && AppServices.CurrentUser?.Role == UserRole.Admin)
+            await LoadUsersAsync();
+    }
+
+    private Task LoadEmployeesAsync() => Ui.RunSafeAsync(this, async () =>
+    {
+        _employees = await AppServices.Api.GetEmployeesAsync();
+        FilterEmployees();
+    });
+
+    private void EmployeeSearchBox_TextChanged(object sender, TextChangedEventArgs e) => FilterEmployees();
+
+    private void FilterEmployees()
+    {
+        if (EmployeesGrid is null)
+            return;
+
+        string search = EmployeeSearchBox.Text.Trim();
+        EmployeesGrid.ItemsSource = _employees.Where(employee =>
+            employee.FullName.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || employee.Phone.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || employee.Cabinet.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    private async void AddEmployeeButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new EmployeeEditWindow { Owner = this };
+        if (dialog.ShowDialog() == true)
+            await LoadEmployeesAsync();
+    }
+
+    private Task LoadUsersAsync() => Ui.RunSafeAsync(this, async () =>
+    {
+        var users = await AppServices.Api.GetUsersAsync();
+        UsersGrid.ItemsSource = users.Select(user =>
+            new { user.FullName, user.Login, RoleName = user.Role.ToDisplayName() }).ToList();
+    });
+
+    private async void AddUserButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (UserRoleBox.SelectedItem is not RoleItem role)
+            return;
+
+        var dto = new CreateUserDto(UserLoginBox.Text.Trim(), UserPasswordBox.Password,
+            UserNameBox.Text.Trim(), role.Role);
+        AddUserButton.IsEnabled = false;
+        try
+        {
+            if (!await Ui.RunSafeAsync(this, () => AppServices.Api.CreateUserAsync(dto)))
+                return;
+
+            UserNameBox.Clear();
+            UserLoginBox.Clear();
+            UserPasswordBox.Clear();
+            await LoadUsersAsync();
+            await Ui.RunSafeAsync(this, async () => TechnicianBox.ItemsSource = await AppServices.Api.GetTechniciansAsync());
+        }
+        finally
+        {
+            AddUserButton.IsEnabled = true;
         }
     }
 

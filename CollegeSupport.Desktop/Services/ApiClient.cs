@@ -74,6 +74,12 @@ public class ApiClient
     public Task<EmployeeDto> CreateEmployeeAsync(CreateEmployeeDto dto) =>
         SendAsync<EmployeeDto>(HttpMethod.Post, "api/employees", dto);
 
+    public Task<List<UserDto>> GetUsersAsync() =>
+        SendAsync<List<UserDto>>(HttpMethod.Get, "api/users");
+
+    public Task<UserDto> CreateUserAsync(CreateUserDto dto) =>
+        SendAsync<UserDto>(HttpMethod.Post, "api/users", dto);
+
     public Task<List<UserDto>> GetTechniciansAsync() =>
         SendAsync<List<UserDto>>(HttpMethod.Get, "api/users/technicians");
 

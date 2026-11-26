@@ -19,7 +19,9 @@ public class EmployeeRepository : IEmployeeRepository
         if (!string.IsNullOrWhiteSpace(search))
         {
             string s = search.Trim();
-            query = query.Where(x => x.FullName.Contains(s) || x.Phone.Contains(s) || x.Cabinet.Contains(s));
+            query = query.Where(x => AppDbContext.ContainsIgnoreCase(x.FullName, s)
+                                     || AppDbContext.ContainsIgnoreCase(x.Phone, s)
+                                     || AppDbContext.ContainsIgnoreCase(x.Cabinet, s));
         }
         return await query.OrderBy(x => x.FullName).ToListAsync();
     }

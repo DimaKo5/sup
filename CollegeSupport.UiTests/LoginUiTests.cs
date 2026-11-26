@@ -95,15 +95,48 @@ public class LoginUiTests
         var grid = Control(main, "AppealsGrid").AsDataGridView();
         Assert.NotEmpty(grid.Rows);
         Control(main, "SearchBox").AsTextBox().Text = "NoMatch-" + Guid.NewGuid().ToString("N");
-        Control(main, "FindButton").AsButton().Invoke();
         Assert.True(Retry.WhileFalse(() => grid.Rows.Length == 0, TimeSpan.FromSeconds(10)).Success);
     }
 
-    private static Window SignIn(Application app, UIA3Automation automation)
+    [InteractiveFact]
+    public void MainWindow_ChangingFilterRefreshesWithoutSearchButton()
+    {
+        using var automation = new UIA3Automation();
+        using var client = new TestClient();
+        var main = SignIn(client.Application, automation);
+        Control(main, "StatusFilter").AsComboBox().Select("Отклонено");
+        Assert.True(Retry.WhileFalse(
+            () => Control(main, "CountText").Name == "Найдено обращений: 1",
+            TimeSpan.FromSeconds(10)).Success);
+        Assert.Single(Control(main, "AppealsGrid").AsDataGridView().Rows);
+    }
+
+    [InteractiveFact]
+    public void AdministratorCanOpenUsersAndEmployeeDirectory()
+    {
+        using var automation = new UIA3Automation();
+        using var client = new TestClient();
+        var main = SignIn(client.Application, automation, "admin", "Admin123");
+
+        Control(main, "UsersTab").Patterns.SelectionItem.Pattern.Select();
+        Assert.True(Retry.WhileFalse(
+            () => Control(main, "UsersGrid").AsDataGridView().Rows.Length >= 4,
+            TimeSpan.FromSeconds(10)).Success);
+        Assert.NotNull(Control(main, "AddUserButton"));
+
+        Control(main, "EmployeesTab").Patterns.SelectionItem.Pattern.Select();
+        Control(main, "EmployeeSearchBox").AsTextBox().Text = "иванов";
+        Assert.True(Retry.WhileFalse(
+            () => Control(main, "EmployeesGrid").AsDataGridView().Rows.Length == 1,
+            TimeSpan.FromSeconds(10)).Success);
+    }
+
+    private static Window SignIn(Application app, UIA3Automation automation,
+        string user = "dispatcher", string password = "Dispatcher123")
     {
         var login = WaitWindow(app, automation, LoginTitle);
-        Control(login, "LoginBox").AsTextBox().Text = "dispatcher";
-        Control(login, "PasswordInput").AsTextBox().Enter("Dispatcher123");
+        Control(login, "LoginBox").AsTextBox().Text = user;
+        Control(login, "PasswordInput").AsTextBox().Enter(password);
         Control(login, "LoginButton").AsButton().Invoke();
         var main = WaitWindow(app, automation, MainTitle);
         Assert.True(Retry.WhileFalse(
