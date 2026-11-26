@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="CollegeSupport.Api/CollegeSupport.Api.csproj" />
+  <Project Path="CollegeSupport.Core/CollegeSupport.Core.csproj" />
+  <Project Path="CollegeSupport.Data/CollegeSupport.Data.csproj" />
+  <Project Path="CollegeSupport.Desktop/CollegeSupport.Desktop.csproj" />
+  <Project Path="CollegeSupport.Tests/CollegeSupport.Tests.csproj" />
+  <Project Path="CollegeSupport.UiTests/CollegeSupport.UiTests.csproj" />
+</Solution>

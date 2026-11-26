@@ -1,0 +1,16 @@
+[
+  {
+    "Name": "CollegeSupport (Api + Desktop)",
+    "Projects": [
+      {
+        "Path": "CollegeSupport.Api\\CollegeSupport.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      },
+      {
+        "Path": "CollegeSupport.Desktop\\CollegeSupport.Desktop.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
