@@ -1,0 +1,51 @@
+<Window x:Class="CollegeSupport.Desktop.AppealEditWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Новое обращение" Width="480" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Loaded="Window_Loaded"
+        AutomationProperties.AutomationId="AppealEditWindow">
+    <StackPanel Margin="16">
+        <TextBlock Text="Сотрудник"/>
+        <DockPanel Margin="0,2,0,0">
+            <Button x:Name="NewEmployeeButton" DockPanel.Dock="Right" Content="+ Новый" Width="80" Margin="6,0,0,0"
+                    Click="NewEmployeeButton_Click" AutomationProperties.AutomationId="NewEmployeeButton"/>
+            <ComboBox x:Name="EmployeeBox" IsEditable="True" IsTextSearchEnabled="True" TextSearch.TextPath="FullName"
+                      AutomationProperties.AutomationId="EmployeeBox">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock>
+                            <Run Text="{Binding FullName, Mode=OneWay}"/>
+                            <Run Text="{Binding Phone, Mode=OneWay}" Foreground="Gray"/>
+                        </TextBlock>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </DockPanel>
+
+        <TextBlock Text="Кабинет" Margin="0,8,0,0"/>
+        <ComboBox x:Name="CabinetBox" IsEditable="True" Margin="0,2,0,0"
+                  AutomationProperties.AutomationId="CabinetBox">
+            <ComboBoxItem Content="101"/>
+            <ComboBoxItem Content="102"/>
+            <ComboBoxItem Content="203"/>
+            <ComboBoxItem Content="305"/>
+        </ComboBox>
+
+        <TextBlock Text="Оборудование" Margin="0,8,0,0"/>
+        <TextBox x:Name="EquipmentBox" Height="26" Margin="0,2,0,0"
+                 AutomationProperties.AutomationId="EquipmentBox"/>
+
+        <TextBlock Text="Описание проблемы (не менее 10 символов)" Margin="0,8,0,0"/>
+        <TextBox x:Name="ProblemBox" Height="80" Margin="0,2,0,0" AcceptsReturn="True" TextWrapping="Wrap"
+                 VerticalScrollBarVisibility="Auto" AutomationProperties.AutomationId="ProblemBox"/>
+
+        <TextBlock x:Name="ErrorText" Foreground="Firebrick" TextWrapping="Wrap" Margin="0,8,0,0"
+                   Visibility="Collapsed" AutomationProperties.AutomationId="ErrorText"/>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button x:Name="SaveButton" Content="Сохранить" Width="100" Height="28" IsDefault="True"
+                    Click="SaveButton_Click" AutomationProperties.AutomationId="SaveButton"/>
+            <Button Content="Отмена" Width="100" Height="28" Margin="8,0,0,0" IsCancel="True" AutomationProperties.AutomationId="CancelButton"/>
+        </StackPanel>
+    </StackPanel>
+</Window>
