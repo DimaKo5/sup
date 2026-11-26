@@ -1,4 +1,5 @@
 using CollegeSupport.Core.Entities;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace CollegeSupport.Data;
@@ -7,7 +8,14 @@ public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
+        var connection = (SqliteConnection)Database.GetDbConnection();
+        connection.CreateFunction<string, string, bool>(
+            "college_contains", (value, search) => value.Contains(search, StringComparison.OrdinalIgnoreCase),
+            isDeterministic: true);
     }
+
+    internal static bool ContainsIgnoreCase(string value, string search) =>
+        throw new NotSupportedException("Функция применяется в запросах SQLite.");
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Employee> Employees => Set<Employee>();
@@ -21,6 +29,9 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasDbFunction(() => ContainsIgnoreCase(default!, default!))
+            .HasName("college_contains");
+
         modelBuilder.Entity<User>(e =>
         {
             e.Property(u => u.Login).HasMaxLength(50).IsRequired();

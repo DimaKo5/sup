@@ -29,10 +29,10 @@ public class AppealRepository : IAppealRepository
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
             string s = filter.Search.Trim();
-            query = query.Where(a => a.Equipment.Contains(s)
-                                     || a.Cabinet.Contains(s)
-                                     || a.Employee!.FullName.Contains(s)
-                                     || a.Employee!.Phone.Contains(s));
+            query = query.Where(a => AppDbContext.ContainsIgnoreCase(a.Equipment, s)
+                                     || AppDbContext.ContainsIgnoreCase(a.Cabinet, s)
+                                     || AppDbContext.ContainsIgnoreCase(a.Employee!.FullName, s)
+                                     || AppDbContext.ContainsIgnoreCase(a.Employee!.Phone, s));
         }
 
         return await query.OrderByDescending(a => a.CreatedAt).ToListAsync();

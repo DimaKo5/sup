@@ -18,14 +18,6 @@
         <!-- Строка состояния -->
         <StatusBar DockPanel.Dock="Bottom">
             <StatusBarItem>
-                <TextBlock x:Name="ServerStatusText" Text="Сервер: проверка…"/>
-            </StatusBarItem>
-            <Separator/>
-            <StatusBarItem>
-                <TextBlock x:Name="CountText" AutomationProperties.AutomationId="CountText"/>
-            </StatusBarItem>
-            <Separator/>
-            <StatusBarItem>
                 <TextBlock x:Name="UserText"/>
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right">
@@ -34,73 +26,129 @@
             </StatusBarItem>
         </StatusBar>
 
-        <!-- Фильтры -->
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8">
-            <TextBlock Text="Статус:" VerticalAlignment="Center" Margin="0,0,6,0"/>
-            <ComboBox x:Name="StatusFilter" Width="190" DisplayMemberPath="Name"
-                      AutomationProperties.AutomationId="StatusFilter"/>
-            <TextBlock Text="Поиск:" VerticalAlignment="Center" Margin="16,0,6,0"/>
-            <TextBox x:Name="SearchBox" Width="240" VerticalContentAlignment="Center"
-                     KeyDown="SearchBox_KeyDown" AutomationProperties.AutomationId="SearchBox"/>
-            <Button x:Name="FindButton" Content="Найти" Width="90" Margin="6,0,0,0"
-                    Click="FindButton_Click" AutomationProperties.AutomationId="FindButton"/>
-        </StackPanel>
+        <TabControl x:Name="WorkspaceTabs" Margin="8" AutomationProperties.AutomationId="WorkspaceTabs">
+            <TabItem Header="Обращения" AutomationProperties.AutomationId="AppealsTab">
+                <DockPanel>
+                    <!-- Фильтры -->
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8">
+                        <TextBlock Text="Статус:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <ComboBox x:Name="StatusFilter" Width="190" DisplayMemberPath="Name"
+                                  AutomationProperties.AutomationId="StatusFilter"/>
+                        <TextBlock Text="ФИО, кабинет, оборудование:" VerticalAlignment="Center" Margin="16,0,6,0"/>
+                        <TextBox x:Name="SearchBox" Width="240" VerticalContentAlignment="Center"
+                                 KeyDown="SearchBox_KeyDown" AutomationProperties.AutomationId="SearchBox"/>
+                        <Button x:Name="FindButton" Content="Найти" Width="90" Margin="6,0,0,0"
+                                Click="FindButton_Click" AutomationProperties.AutomationId="FindButton"/>
+                    </StackPanel>
 
-        <!-- Действия -->
-        <StackPanel x:Name="ActionsPanel" DockPanel.Dock="Right" Width="240" Margin="8,0,8,8">
-            <Button x:Name="NewAppealButton" Content="Новое обращение…" Height="30"
-                    Click="NewAppealButton_Click" AutomationProperties.AutomationId="NewAppealButton"/>
+                    <!-- Действия -->
+                    <StackPanel x:Name="ActionsPanel" DockPanel.Dock="Right" Width="240" Margin="8,0,8,8">
+                        <Button x:Name="NewAppealButton" Content="Новое обращение…" Height="30"
+                                Click="NewAppealButton_Click" AutomationProperties.AutomationId="NewAppealButton"/>
 
-            <GroupBox Header="Статус выбранного обращения" Margin="0,12,0,0">
-                <StackPanel Margin="4">
-                    <ComboBox x:Name="NextStatusBox" DisplayMemberPath="Name"
-                              AutomationProperties.AutomationId="NextStatusBox"/>
-                    <TextBlock Text="Стоимость работ, руб.:" Margin="0,6,0,2"/>
-                    <TextBox x:Name="CostBox" AutomationProperties.AutomationId="CostBox"/>
-                    <Button x:Name="ChangeStatusButton" Content="Сменить статус" Height="28" Margin="0,6,0,0"
-                            Click="ChangeStatusButton_Click" AutomationProperties.AutomationId="ChangeStatusButton"/>
-                </StackPanel>
-            </GroupBox>
+                        <GroupBox Header="Статус выбранного обращения" Margin="0,12,0,0">
+                            <StackPanel Margin="4">
+                                <ComboBox x:Name="NextStatusBox" DisplayMemberPath="Name"
+                                          AutomationProperties.AutomationId="NextStatusBox"/>
+                                <TextBlock Text="Стоимость работ, руб.:" Margin="0,6,0,2"/>
+                                <TextBox x:Name="CostBox" AutomationProperties.AutomationId="CostBox"/>
+                                <Button x:Name="ChangeStatusButton" Content="Сменить статус" Height="28" Margin="0,6,0,0"
+                                        Click="ChangeStatusButton_Click" AutomationProperties.AutomationId="ChangeStatusButton"/>
+                            </StackPanel>
+                        </GroupBox>
 
-            <GroupBox x:Name="TechnicianGroup" Header="Техник" Margin="0,12,0,0">
-                <StackPanel Margin="4">
-                    <ComboBox x:Name="TechnicianBox" DisplayMemberPath="FullName"
-                              AutomationProperties.AutomationId="TechnicianBox"/>
-                    <Button x:Name="AssignButton" Content="Назначить техника" Height="28" Margin="0,6,0,0"
-                            Click="AssignButton_Click" AutomationProperties.AutomationId="AssignButton"/>
-                </StackPanel>
-            </GroupBox>
+                        <GroupBox x:Name="TechnicianGroup" Header="Техник" Margin="0,12,0,0">
+                            <StackPanel Margin="4">
+                                <ComboBox x:Name="TechnicianBox" DisplayMemberPath="FullName"
+                                          AutomationProperties.AutomationId="TechnicianBox"/>
+                                <Button x:Name="AssignButton" Content="Назначить техника" Height="28" Margin="0,6,0,0"
+                                        Click="AssignButton_Click" AutomationProperties.AutomationId="AssignButton"/>
+                            </StackPanel>
+                        </GroupBox>
 
-            <GroupBox x:Name="ExchangeGroup" Header="Обмен данными" Margin="0,12,0,0">
-                <StackPanel Margin="4">
-                    <Button x:Name="ImportButton" Content="Импорт сотрудников (CSV)…" Height="28"
-                            Click="ImportButton_Click" AutomationProperties.AutomationId="ImportButton"/>
-                    <Button x:Name="ExportButton" Content="Выгрузить обращения…" Height="28" Margin="0,6,0,0"
-                            Click="ExportButton_Click" AutomationProperties.AutomationId="ExportButton"/>
-                </StackPanel>
-            </GroupBox>
+                        <GroupBox x:Name="ExchangeGroup" Header="Обмен данными" Margin="0,12,0,0">
+                            <StackPanel Margin="4">
+                                <Button x:Name="ImportButton" Content="Импорт сотрудников (CSV)…" Height="28"
+                                        Click="ImportButton_Click" AutomationProperties.AutomationId="ImportButton"/>
+                                <Button x:Name="ExportButton" Content="Выгрузить обращения…" Height="28" Margin="0,6,0,0"
+                                        Click="ExportButton_Click" AutomationProperties.AutomationId="ExportButton"/>
+                            </StackPanel>
+                        </GroupBox>
 
-            <Button x:Name="StatisticsButton" Content="Статистика" Height="30" Margin="0,12,0,0"
-                    Click="StatisticsButton_Click" AutomationProperties.AutomationId="StatisticsButton"/>
-        </StackPanel>
+                        <Button x:Name="StatisticsButton" Content="Статистика" Height="30" Margin="0,12,0,0"
+                                Click="StatisticsButton_Click" AutomationProperties.AutomationId="StatisticsButton"/>
+                    </StackPanel>
 
-        <!-- Таблица обращений -->
-        <DataGrid x:Name="AppealsGrid" Margin="8,0,0,8" AutoGenerateColumns="False" IsReadOnly="True" AlternatingRowBackground="#EFF6F7"
-                  SelectionMode="Single" CanUserAddRows="False"
-                  SelectionChanged="AppealsGrid_SelectionChanged"
-                  AutomationProperties.AutomationId="AppealsGrid">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="№" Binding="{Binding Id}" Width="45"/>
-                <DataGridTextColumn Header="Создано" Width="115"
-                    Binding="{Binding CreatedAt, Converter={StaticResource UtcToLocal}, StringFormat=dd.MM.yyyy HH:mm}"/>
-                <DataGridTextColumn Header="Сотрудник" Binding="{Binding EmployeeName}" Width="*"/>
-                <DataGridTextColumn Header="Телефон" Binding="{Binding EmployeePhone}" Width="110"/>
-                <DataGridTextColumn Header="Кабинет" Binding="{Binding Cabinet}" Width="80"/>
-                <DataGridTextColumn Header="Оборудование" Binding="{Binding Equipment}" Width="*"/>
-                <DataGridTextColumn Header="Статус" Binding="{Binding StatusName}" Width="150"/>
-                <DataGridTextColumn Header="Техник" Binding="{Binding TechnicianName}" Width="*"/>
-                <DataGridTextColumn Header="Стоимость" Binding="{Binding Cost, StringFormat=N2}" Width="90"/>
-            </DataGrid.Columns>
-        </DataGrid>
+                    <TextBlock x:Name="CountText" DockPanel.Dock="Bottom" Margin="8,4"
+                               AutomationProperties.AutomationId="CountText"/>
+                    <!-- Таблица обращений -->
+                    <DataGrid x:Name="AppealsGrid" Margin="8,0,0,8" AutoGenerateColumns="False" IsReadOnly="True" AlternatingRowBackground="#EFF6F7"
+                              SelectionMode="Single" CanUserAddRows="False"
+                              SelectionChanged="AppealsGrid_SelectionChanged"
+                              AutomationProperties.AutomationId="AppealsGrid">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="№" Binding="{Binding Id}" Width="45"/>
+                            <DataGridTextColumn Header="Создано" Width="115"
+                                Binding="{Binding CreatedAt, Converter={StaticResource UtcToLocal}, StringFormat=dd.MM.yyyy HH:mm}"/>
+                            <DataGridTextColumn Header="Сотрудник" Binding="{Binding EmployeeName}" Width="*"/>
+                            <DataGridTextColumn Header="Телефон" Binding="{Binding EmployeePhone}" Width="110"/>
+                            <DataGridTextColumn Header="Кабинет" Binding="{Binding Cabinet}" Width="80"/>
+                            <DataGridTextColumn Header="Оборудование" Binding="{Binding Equipment}" Width="*"/>
+                            <DataGridTextColumn Header="Статус" Binding="{Binding StatusName}" Width="150"/>
+                            <DataGridTextColumn Header="Техник" Binding="{Binding TechnicianName}" Width="*"/>
+                            <DataGridTextColumn Header="Стоимость" Binding="{Binding Cost, StringFormat=N2}" Width="90"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+            <TabItem x:Name="EmployeesTab" Header="Сотрудники и кабинеты" Visibility="Collapsed"
+                     AutomationProperties.AutomationId="EmployeesTab">
+                <DockPanel Margin="8">
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="ФИО, телефон или кабинет" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBox x:Name="EmployeeSearchBox" Width="240" TextChanged="EmployeeSearchBox_TextChanged"
+                                 AutomationProperties.AutomationId="EmployeeSearchBox"/>
+                        <Button Content="Добавить сотрудника…" Margin="12,0,0,0" Padding="10,4"
+                                Click="AddEmployeeButton_Click" AutomationProperties.AutomationId="AddEmployeeButton"/>
+                    </StackPanel>
+                    <DataGrid x:Name="EmployeesGrid" AutoGenerateColumns="False" IsReadOnly="True"
+                              CanUserAddRows="False" AutomationProperties.AutomationId="EmployeesGrid">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="2*"/>
+                            <DataGridTextColumn Header="Кабинет" Binding="{Binding Cabinet}" Width="*"/>
+                            <DataGridTextColumn Header="Телефон" Binding="{Binding Phone}" Width="*"/>
+                            <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="2*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+            <TabItem x:Name="UsersTab" Header="Пользователи" Visibility="Collapsed"
+                     AutomationProperties.AutomationId="UsersTab">
+                <DockPanel Margin="8">
+                    <GroupBox Header="Новая учётная запись" DockPanel.Dock="Right" Width="230" Margin="8,0,0,0">
+                        <StackPanel Margin="8">
+                            <TextBlock Text="ФИО"/>
+                            <TextBox x:Name="UserNameBox" MaxLength="150" AutomationProperties.AutomationId="UserNameBox"/>
+                            <TextBlock Text="Логин" Margin="0,8,0,0"/>
+                            <TextBox x:Name="UserLoginBox" MaxLength="50" AutomationProperties.AutomationId="UserLoginBox"/>
+                            <TextBlock Text="Пароль" Margin="0,8,0,0"/>
+                            <PasswordBox x:Name="UserPasswordBox" AutomationProperties.AutomationId="UserPasswordBox"/>
+                            <TextBlock Text="Роль" Margin="0,8,0,0"/>
+                            <ComboBox x:Name="UserRoleBox" DisplayMemberPath="Name" AutomationProperties.AutomationId="UserRoleBox"/>
+                            <Button x:Name="AddUserButton" Content="Создать учётную запись" Margin="0,12,0,0" Padding="6"
+                                    Click="AddUserButton_Click" AutomationProperties.AutomationId="AddUserButton"/>
+                        </StackPanel>
+                    </GroupBox>
+                    <DataGrid x:Name="UsersGrid" AutoGenerateColumns="False" IsReadOnly="True"
+                              CanUserAddRows="False" AutomationProperties.AutomationId="UsersGrid">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="2*"/>
+                            <DataGridTextColumn Header="Логин" Binding="{Binding Login}" Width="*"/>
+                            <DataGridTextColumn Header="Роль" Binding="{Binding RoleName}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+        </TabControl>
     </DockPanel>
 </Window>
