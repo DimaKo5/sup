@@ -1,0 +1,52 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+[Xx]64/
+[Xx]86/
+[Aa]rtifacts/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+# Test results
+[Tt]est[Rr]esult*/
+coverage*.xml
+coverage*.json
+coverage*.cobertura.xml
+
+# NuGet
+*.nupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+project.lock.json
+project.assets.json
+*.nuget.props
+*.nuget.targets
+
+# Local database and logs
+*.db
+*.db-shm
+*.db-wal
+logs/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Exported files from CollegeSupport
+docs/exports/
+
+# Local report tooling and exports
+*.stage2
+*.docx
+artifacts/
+
