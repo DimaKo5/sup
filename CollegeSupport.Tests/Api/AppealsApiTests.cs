@@ -48,6 +48,39 @@ public class AppealsApiTests : IDisposable
     }
 
     [Fact]
+    public async Task Search_WithCyrillicAndDifferentCase_MatchesSurnameAndStatus()
+    {
+        using var client = await AuthorizedClientAsync();
+        string search = Uri.EscapeDataString("  ИвАНоВ  ");
+
+        var appeals = await client.GetFromJsonAsync<List<AppealDto>>(
+            $"api/appeals?status=Closed&search={search}", JsonDefaults.Options);
+        var employees = await client.GetFromJsonAsync<List<EmployeeDto>>(
+            $"api/employees?search={search}", JsonDefaults.Options);
+
+        var appeal = Assert.Single(appeals!);
+        Assert.Equal(AppealStatus.Closed, appeal.Status);
+        Assert.Equal(appeal.EmployeeId, Assert.Single(employees!).Id);
+        Assert.StartsWith("Иванов", appeal.EmployeeName);
+    }
+
+    [Fact]
+    public async Task Users_AdministratorCanCreateAndList_DispatcherCannot()
+    {
+        using var admin = await AuthorizedClientAsync("admin", "Admin123");
+        using var dispatcher = await AuthorizedClientAsync();
+        var input = new CreateUserDto("new-technician", "Test12345", "Тестовый Техник", UserRole.Technician);
+
+        using var forbidden = await dispatcher.PostAsJsonAsync("api/users", input, JsonDefaults.Options);
+        Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
+
+        using var created = await admin.PostAsJsonAsync("api/users", input, JsonDefaults.Options);
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var users = await admin.GetFromJsonAsync<List<UserDto>>("api/users", JsonDefaults.Options);
+        Assert.Contains(users!, user => user.Login == input.Login && user.Role == UserRole.Technician);
+    }
+
+    [Fact]
     public async Task GetAppeals_WithoutToken_Returns401()
     {
         var client = _factory.CreateClient();
